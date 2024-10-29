@@ -11,21 +11,28 @@
     
     <!-- Authorization and Repository Selection -->
     <button id="authorize-button">Authorize GitHub</button>
+    
+    <!-- Repository selection UI, initially hidden -->
     <div id="repo-selection" style="display: none;">
       <label for="repo-select">Select GitHub Repository:</label>
       <select id="repo-select"></select>
       <button id="confirm-repo">Use Selected Repo</button>
     </div>
 
+    <!-- Buttons to save and load JSON to/from GitHub -->
     <button onclick="saveToGitHub()">Save JSON to GitHub</button>
     <button onclick="loadFromGitHub()">Load JSON from GitHub</button>
     
+    <!-- Area to add pathways and export to Common Cartridge -->
     <div id="pathways"></div>
     <button onclick="addPathway()">Add Pathway</button>
     <button onclick="exportToCommonCartridge()">Export to Common Cartridge</button>
+    
+    <!-- Output container for JSON preview or any other output -->
     <div id="output"></div>
   </div>
 
+  <!-- Include JavaScript files -->
   <script src="scripts/authorize.js"></script>
   <script src="scripts/githubOperations.js"></script>
   <script src="scripts/app.js"></script>

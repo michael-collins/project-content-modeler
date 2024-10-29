@@ -1,5 +1,6 @@
 let accessToken = null;
 let codeVerifier = null;
+let selectedRepo = null;  // Define selectedRepo to be used globally
 
 // Generate a random string for PKCE code verifier
 function generateCodeVerifier() {
@@ -21,9 +22,17 @@ async function generateCodeChallenge(verifier) {
 
 // Fetch the GitHub Client ID from the serverless function
 async function fetchClientId() {
-  const response = await fetch('https://github-auth-server.vercel.app/api/get-client-id');  // Adjust if using a custom API path
-  const data = await response.json();
-  return data.clientId;
+  try {
+    const response = await fetch('https://github-auth-server.vercel.app/api/get-client-id');
+    if (!response.ok) {
+      throw new Error('Failed to fetch Client ID');
+    }
+    const data = await response.json();
+    return data.clientId;
+  } catch (error) {
+    console.error('Error fetching Client ID:', error);
+    alert('Could not retrieve Client ID. Please try again later.');
+  }
 }
 
 // Initiate GitHub Authorization Code Flow with PKCE
@@ -51,8 +60,8 @@ async function handleAuthorizationCallback() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         code: code,
-        client_id: await fetchClientId(),  // Fetch Client ID again if needed
-        redirect_uri: 'https://project-content-modeler.vercel.app',  // Your app's URL
+        client_id: await fetchClientId(),
+        redirect_uri: 'https://project-content-modeler.vercel.app',
         code_verifier: codeVerifier
       })
     });
@@ -63,10 +72,40 @@ async function handleAuthorizationCallback() {
       alert('Authorization successful!');
       // Clear the URL of the authorization code for a clean look
       window.history.replaceState({}, document.title, '/');
+      
+      // Show the repository selection UI
+      document.getElementById('repo-selection').style.display = 'block';
+      
+      // Fetch repositories for selection
+      await populateRepoSelection();  
     } else {
       console.error('Authorization failed:', tokenData);
     }
   }
+}
+
+// Populate the repository selection dropdown
+async function populateRepoSelection() {
+  const response = await fetch('https://api.github.com/user/repos', {
+    headers: { Authorization: `token ${accessToken}` }
+  });
+  const repos = await response.json();
+
+  const repoSelect = document.getElementById('repo-select');
+  repoSelect.innerHTML = '';
+
+  repos.forEach(repo => {
+    const option = document.createElement('option');
+    option.value = repo.full_name;
+    option.textContent = repo.full_name;
+    repoSelect.appendChild(option);
+  });
+
+  // Set up confirm button to select repo
+  document.getElementById('confirm-repo').addEventListener('click', () => {
+    selectedRepo = repoSelect.value;  // Set selectedRepo here
+    alert(`Selected repository: ${selectedRepo}`);
+  });
 }
 
 // Attach the authorization function to a button click event
