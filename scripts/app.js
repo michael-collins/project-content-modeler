@@ -28,15 +28,15 @@ function renderContent() {
 
 function renderPathway(pathway) {
   const section = document.createElement('div');
-  section.className = 'section';
-  section.dataset.pathwayId = pathway.id;
+  section.className = 'border border-gray-300 rounded-lg p-4 mb-4 bg-gray-50';
 
   const removeButton = document.createElement('button');
-  removeButton.className = 'remove-btn';
-  removeButton.textContent = 'Remove';
+  removeButton.className = 'float-right bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600';
+  removeButton.textContent = 'Remove Pathway';
   removeButton.onclick = () => removeItem('pathway', pathway.id);
 
   const title = document.createElement('h2');
+  title.className = 'text-lg font-semibold mb-2';
   title.textContent = 'Pathway';
 
   section.appendChild(removeButton);
@@ -45,36 +45,33 @@ function renderPathway(pathway) {
   section.appendChild(createInput('Description', pathway.description, 'text', { field: 'description', pathwayId: pathway.id }));
 
   const specializationContainer = document.createElement('div');
-  specializationContainer.className = 'nested';
-
-  const specializationTitle = document.createElement('h3');
-  specializationTitle.textContent = 'Specializations';
-  specializationContainer.appendChild(specializationTitle);
+  specializationContainer.className = 'ml-4 mt-3 space-y-2';
 
   pathway.specializations.forEach(spec => {
     specializationContainer.appendChild(renderSpecialization(pathway.id, spec));
   });
 
   const addSpecializationButton = document.createElement('button');
+  addSpecializationButton.className = 'w-full mt-2 bg-blue-500 text-white font-bold py-1 px-2 rounded hover:bg-blue-600';
   addSpecializationButton.textContent = 'Add Specialization';
-  addSpecializationButton.onclick = () => addSpecialization(pathway.id); // Use global addSpecialization function
-  specializationContainer.appendChild(addSpecializationButton);
+  addSpecializationButton.onclick = () => addSpecialization(pathway.id);
 
   section.appendChild(specializationContainer);
+  section.appendChild(addSpecializationButton);
   return section;
 }
 
 function renderSpecialization(pathwayId, spec) {
   const section = document.createElement('div');
-  section.className = 'section';
-  section.dataset.specId = spec.id;
+  section.className = 'border border-gray-300 rounded-lg p-4 mb-2 bg-white';
 
   const removeButton = document.createElement('button');
-  removeButton.className = 'remove-btn';
-  removeButton.textContent = 'Remove';
+  removeButton.className = 'float-right bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600';
+  removeButton.textContent = 'Remove Specialization';
   removeButton.onclick = () => removeItem('specialization', pathwayId, spec.id);
 
   const title = document.createElement('h3');
+  title.className = 'text-md font-semibold mb-1';
   title.textContent = 'Specialization';
 
   section.appendChild(removeButton);
