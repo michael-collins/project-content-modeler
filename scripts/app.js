@@ -1,4 +1,4 @@
-let contentModel = {};  // Holds the dynamically generated JSON structure
+let contentModel = { projects: [] };  // Holds the dynamically generated JSON structure
 let config = {};  // Holds the structure and controls from config.json
 
 // Load configuration JSON
@@ -16,175 +16,122 @@ async function loadConfig() {
 
 // Initialize content model based on the configuration
 function initializeContentModel() {
-  contentModel = createDefaultStructure(config);
+  contentModel = { projects: [] };  // Start with an empty array for projects
   console.log("Initialized content model:", contentModel);  // Log the initialized content model
 }
 
-// Recursively create the default structure based on config
-function createDefaultStructure(schema) {
-  if (Array.isArray(schema)) {
-    return [createDefaultStructure(schema[0])];
-  }
-  
-  if (typeof schema === 'object') {
-    const obj = {};
-    for (const key in schema) {
-      if (key === 'addEnabled' || key === 'removeEnabled') continue;
-      obj[key] = createDefaultStructure(schema[key]);
-    }
-    return obj;
-  }
-
-  return '';  // Return an empty string for basic fields
-}
-
-// Generic add function using path to reach nested items
-function addItem(parent, key, configSchema) {
-  if (!configSchema || !configSchema.addEnabled) return;
-
-  const newItem = createDefaultStructure(configSchema);
-  
-  if (!Array.isArray(parent[key])) {
-    parent[key] = [];
-  }
-  parent[key].push(newItem);
-  console.log(`Added item to ${key}:`, newItem);  // Log the addition of a new item
+// Add a new project with pathways and specializations
+function addProject() {
+  const newProject = {
+    id: Date.now().toString(),
+    title: '',
+    pathways: {
+      pathwayId: '',
+      pathwayName: '',
+      specializations: []
+    },
+    associatedMaterials: [],
+    productionSchedule: { startDate: '', endDate: '', weeks: [] },
+    learningComponents: { lectures: [], quizzes: [], masteryExercises: [] }
+  };
+  contentModel.projects.push(newProject);
   renderContent();
 }
 
-// Generic remove function
-function removeItem(parentArray, index) {
-  const removedItem = parentArray.splice(index, 1);
-  console.log("Removed item:", removedItem);  // Log the removal of an item
+// Add a new specialization to a pathway
+function addSpecialization(pathwayItem) {
+  const pathwayData = pathwayItem.data;
+  const newSpecialization = { id: Date.now().toString(), title: '', description: '' };
+  pathwayData.specializations.push(newSpecialization);
   renderContent();
 }
 
-// Render the full content model
+// Add a learning component to a specific type (e.g., lectures, quizzes)
+function addLearningComponent(componentType, projectIndex) {
+  const project = contentModel.projects[projectIndex];
+  const newComponent = { id: Date.now().toString(), title: '', content: '' };
+  project.learningComponents[componentType].push(newComponent);
+  renderContent();
+}
+
+// Remove an item from an array based on its index
+function removeItem(array, index) {
+  array.splice(index, 1);
+  renderContent();
+}
+
+// Render the entire content model
 function renderContent() {
-  console.log("Rendering content model:", contentModel);  // Log the current content model
   const container = document.getElementById('pathways');
   container.innerHTML = '';  // Clear existing content
-  container.appendChild(renderObject(contentModel, config));
-  
-  // Display JSON output for preview
-  document.getElementById('output').innerHTML = `<pre>${JSON.stringify(contentModel, null, 2)}</pre>`;
-}
 
-// Recursive function to render an object or array based on config
-function renderObject(obj, schema, path = []) {
-  console.log("Rendering object:", obj, "with schema:", schema);  // Log object and schema at each recursion
-  const container = document.createElement('div');
-  container.className = 'ml-4 mt-3 space-y-2';
+  // Render each project
+  contentModel.projects.forEach((project, projectIndex) => {
+    const pathwayItem = document.createElement('pathway-item');
+    pathwayItem.data = project.pathways;
 
-  for (const key in obj) {
-    let fieldSchema = schema && schema[key];  // Check if schema exists for the key
+    pathwayItem.addEventListener('add-specialization', () => addSpecialization(pathwayItem));
+    pathwayItem.addEventListener('remove-pathway', () => removeItem(contentModel.projects, projectIndex));
 
-    if (Array.isArray(fieldSchema)) {
-      fieldSchema = fieldSchema[0];  // Use the first item as schema for array elements
-    }
+    // Add specializations to the pathway
+    project.pathways.specializations.forEach((spec, specIndex) => {
+      const specializationItem = document.createElement('specialization-item');
+      specializationItem.data = spec;
 
-    // Skip rendering if fieldSchema is undefined
-    if (!fieldSchema) {
-      console.log(`Skipping ${key} as it has no schema.`);  // Log skipping undefined schema
-      continue;
-    }
+      specializationItem.addEventListener('remove-specialization', () => removeItem(project.pathways.specializations, specIndex));
+      pathwayItem.shadowRoot.querySelector('#specializations').appendChild(specializationItem);
+    });
 
-    if (Array.isArray(obj[key])) {
-      const arrayContainer = document.createElement('div');
-      const title = document.createElement('h3');
-      title.className = 'font-semibold mb-2';
-      title.textContent = `${key.charAt(0).toUpperCase() + key.slice(1)}`;
-      arrayContainer.appendChild(title);
+    container.appendChild(pathwayItem);
 
-      // Render items in the array
-      obj[key].forEach((item, index) => {
-        const itemContainer = document.createElement('div');
-        itemContainer.className = 'border border-gray-300 rounded-lg p-4 mb-2 bg-white';
+    // Add learning components within each project
+    for (const [componentType, components] of Object.entries(project.learningComponents)) {
+      const componentContainer = document.createElement('div');
+      componentContainer.className = 'learning-components';
 
-        // Add remove button for each item if allowed
-        if (fieldSchema?.removeEnabled) {  // Safely access removeEnabled
-          const removeButton = document.createElement('button');
-          removeButton.className = 'float-right bg-red-500 text-white p-1 rounded-full hover:bg-red-600';
-          removeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M6 4a1 1 0 011-1h6a1 1 0 011 1v1h3a1 1 0 110 2h-1v9a2 2 0 01-2 2H6a2 2 0 01-2-2V7H3a1 1 0 110-2h3V4zm2 3a1 1 0 012 0v6a1 1 0 11-2 0V7zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V7z" clip-rule="evenodd"/>
-          </svg>`;
-          removeButton.onclick = () => removeItem(obj[key], index);
-          itemContainer.appendChild(removeButton);
-        }
-
-        // Recursively render nested object
-        itemContainer.appendChild(renderObject(item, fieldSchema, [...path, key, index]));
-        arrayContainer.appendChild(itemContainer);
-      });
-
-      // Add button for new items if allowed
-      if (fieldSchema && fieldSchema.addEnabled) {  // Check that addEnabled is accessible
-        const addButton = document.createElement('button');
-        addButton.className = 'w-full mt-2 bg-blue-500 text-white font-bold py-1 px-2 rounded hover:bg-blue-600';
-        addButton.textContent = `Add ${key.slice(0, -1)}`;  // Singular form
-        addButton.onclick = () => addItem(obj, key, fieldSchema);
-        arrayContainer.appendChild(addButton);
+      // Add a header if the component list is not empty
+      if (components.length > 0) {
+        const header = document.createElement('h3');
+        header.className = 'text-md font-semibold mb-2';
+        header.textContent = componentType.charAt(0).toUpperCase() + componentType.slice(1);
+        componentContainer.appendChild(header);
       }
 
-      container.appendChild(arrayContainer);
-    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-      // Render nested objects
-      const nestedContainer = renderObject(obj[key], fieldSchema, [...path, key]);
-      const title = document.createElement('h3');
-      title.className = 'font-semibold mb-2';
-      title.textContent = `${key.charAt(0).toUpperCase() + key.slice(1)}`;
-      container.appendChild(title);
-      container.appendChild(nestedContainer);
-    } else {
-      // Render input fields for basic fields
-      const inputContainer = createInput(key, obj[key], value => {
-        obj[key] = value;
-        renderContent();
+      // Render each learning component item
+      components.forEach((component, componentIndex) => {
+        const componentItem = document.createElement('learning-component-item');
+        componentItem.data = component;
+        componentItem.addEventListener('remove-learning-component', () => removeItem(components, componentIndex));
+        componentContainer.appendChild(componentItem);
       });
-      container.appendChild(inputContainer);
+
+      // Button to add a new learning component of the specified type
+      const addComponentButton = document.createElement('button');
+      addComponentButton.className = 'w-full mt-2 bg-blue-500 text-white font-bold py-1 px-2 rounded hover:bg-blue-600';
+      addComponentButton.textContent = `Add ${componentType.slice(0, -1)}`;
+      addComponentButton.onclick = () => addLearningComponent(componentType, projectIndex);
+      componentContainer.appendChild(addComponentButton);
+
+      container.appendChild(componentContainer);
     }
-  }
-
-  return container;
-}
-
-// Helper to create input fields for primitive values
-function createInput(label, value, onInputChange) {
-  const container = document.createElement('div');
-  container.className = 'mb-2';
-
-  const labelEl = document.createElement('label');
-  labelEl.className = 'block font-medium';
-  labelEl.textContent = label.charAt(0).toUpperCase() + label.slice(1);
-  container.appendChild(labelEl);
-
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.value = value || '';
-  input.className = 'w-full border border-gray-300 rounded px-3 py-1 mt-1';
-
-  // Update model on blur or Enter key
-  input.addEventListener('blur', () => onInputChange(input.value));
-  input.addEventListener('keypress', event => {
-    if (event.key === 'Enter') onInputChange(input.value);
   });
 
-  container.appendChild(input);
-
-  return container;
+  // Update JSON output
+  document.getElementById('output').data = contentModel;
 }
 
-// Clear content model and update display
+// Clear the content model and reset the display
 function clearContent() {
-  contentModel = createDefaultStructure(config); // Reset to default structure
+  contentModel = { projects: [] };  // Reset to default structure
   console.log("Cleared content model:", contentModel);  // Log the cleared content model
-  renderContent(); // Update the display to show the cleared state
+  renderContent();
 }
 
 // Load configuration when the page is ready
 window.addEventListener('DOMContentLoaded', () => {
   loadConfig();
   
-  // Add clear button functionality
+  // Attach functionality for buttons in the main UI
   document.getElementById('clear-button').addEventListener('click', clearContent);
+  document.getElementById('add-project-button').addEventListener('click', addProject);
 });

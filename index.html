@@ -4,63 +4,58 @@
   <meta charset="UTF-8">
   <title>Content Model Builder</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" prefetch>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@2.14.0/dist/full.css" rel="stylesheet" prefetch>
 </head>
-<body class="bg-gray-100">
+<body class="bg-base-200">
   <div class="container mx-auto py-10 px-5">
-    <h1 class="text-2xl font-bold mb-6 text-center">Content Model Builder</h1>
+    <h1 class="text-3xl font-bold mb-6 text-center text-primary">Content Model Builder</h1>
     
     <!-- Two Column Layout -->
     <div class="flex flex-col md:flex-row gap-6">
       
       <!-- Left Column: Controls and Inputs -->
-      <div class="w-full md:w-1/2 bg-white p-5 rounded shadow">
+      <div class="w-full md:w-1/2 bg-white p-5 rounded-lg shadow-lg">
         <!-- Authorization and Repository Selection -->
-        <button id="authorize-button" class="w-full mb-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600">
-          Authorize GitHub
-        </button>
+        <button id="authorize-button" class="btn btn-primary w-full mb-4">Authorize GitHub</button>
         
         <div id="repo-selection" class="mb-4" style="display: none;">
           <label for="repo-select" class="block font-semibold mb-2">Select GitHub Repository:</label>
-          <select id="repo-select" class="w-full border border-gray-300 rounded px-3 py-2 mb-2"></select>
-          <button id="confirm-repo" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-600">
-            Use Selected Repo
-          </button>
+          <select id="repo-select" class="select select-bordered w-full mb-2"></select>
+          <button id="confirm-repo" class="btn btn-success w-full">Use Selected Repo</button>
         </div>
 
         <!-- Buttons to save and load JSON -->
         <div class="flex gap-2 mb-4">
-          <button onclick="saveToGitHub()" class="w-full bg-indigo-500 text-white font-bold py-2 px-4 rounded hover:bg-indigo-600">
-            Save JSON to GitHub
-          </button>
-          <button onclick="loadFromGitHub()" class="w-full bg-indigo-500 text-white font-bold py-2 px-4 rounded hover:bg-indigo-600">
-            Load JSON from GitHub
-          </button>
+          <button onclick="saveToGitHub()" class="btn btn-info w-full">Save JSON to GitHub</button>
+          <button onclick="loadFromGitHub()" class="btn btn-info w-full">Load JSON from GitHub</button>
         </div>
         
         <!-- Clear JSON Button -->
-        <button id="clear-button" class="w-full mb-4 bg-red-500 text-white font-bold py-2 px-4 rounded hover:bg-red-600">
-          Clear JSON
-        </button>
+        <button id="clear-button" class="btn btn-error w-full mb-4">Clear JSON</button>
+        
+        <!-- Add Project Button -->
+        <button id="add-project-button" class="btn btn-secondary w-full mt-2">Add Project</button>
         
         <!-- Dynamically Generated Content Area -->
-        <div id="pathways" class="space-y-4"></div>
+        <div id="pathways" class="space-y-4 mt-4"></div>
 
         <!-- Export Button -->
-        <button onclick="exportToCommonCartridge()" class="w-full mt-2 bg-yellow-500 text-white font-bold py-2 px-4 rounded hover:bg-yellow-600">
-          Export to Common Cartridge
-        </button>
+        <button onclick="exportToCommonCartridge()" class="btn btn-warning w-full mt-2">Export to Common Cartridge</button>
       </div>
       
       <!-- Right Column: JSON Output Preview -->
-      <div class="w-full md:w-1/2 bg-white p-5 rounded shadow overflow-auto">
-        <h2 class="text-lg font-bold mb-4">JSON Preview</h2>
-        <div id="output" class="bg-gray-50 p-3 rounded text-xs text-gray-800 whitespace-pre-wrap"></div>
+      <div class="w-full md:w-1/2 bg-white p-5 rounded-lg shadow-lg overflow-auto">
+        <h2 class="text-lg font-bold mb-4 text-secondary">JSON Preview</h2>
+        <json-output id="output" class="bg-base-100 p-3 rounded text-sm text-gray-800 whitespace-pre-wrap"></json-output>
       </div>
-
     </div>
   </div>
 
   <!-- Include JavaScript files -->
+  <script src="components/json-output.js"></script>
+  <script src="components/pathway-item.js"></script>
+  <script src="components/specialization-item.js"></script>
+  <script src="components/learning-component-item.js"></script>
   <script src="scripts/authorize.js"></script>
   <script src="scripts/app.js"></script>
   <script src="scripts/githubOperations.js"></script>
