@@ -1,0 +1,109 @@
+{
+    "Pathway": {
+      "id": "string",
+      "title": "string",
+      "description": "string",
+      "addEnabled": true,
+      "removeEnabled": true,
+      "specializations": [
+        {
+          "id": "string",
+          "title": "string",
+          "description": "string",
+          "addEnabled": true,
+          "removeEnabled": true,
+          "projects": [
+            {
+              "id": "string",
+              "title": "string",
+              "tags": ["string"],
+              "addEnabled": true,
+              "removeEnabled": true,
+              "associatedMaterials": [
+                {
+                  "id": "string",
+                  "title": "string",
+                  "type": "string",
+                  "url": "string",
+                  "addEnabled": false,
+                  "removeEnabled": true
+                }
+              ],
+              "productionSchedule": {
+                "startDate": "date",
+                "endDate": "date",
+                "weeks": [
+                  {
+                    "weekNumber": "integer",
+                    "startDate": "date",
+                    "endDate": "date",
+                    "activities": ["string"],
+                    "addEnabled": false,
+                    "removeEnabled": true
+                  }
+                ]
+              },
+              "learningComponents": {
+                "title": "string",
+                "overview": "string",
+                "projectDeliverables": [
+                  {
+                    "id": "string",
+                    "title": "string",
+                    "description": "string",
+                    "dueDate": "date",
+                    "addEnabled": true,
+                    "removeEnabled": true
+                  }
+                ],
+                "lectures": [
+                  {
+                    "id": "string",
+                    "title": "string",
+                    "content": "string",
+                    "duration": "integer",
+                    "addEnabled": true,
+                    "removeEnabled": true
+                  }
+                ],
+                "quizzes": [
+                  {
+                    "id": "string",
+                    "title": "string",
+                    "questions": ["string"],
+                    "addEnabled": true,
+                    "removeEnabled": true
+                  }
+                ],
+                "masteryExercises": [
+                  {
+                    "id": "string",
+                    "title": "string",
+                    "description": "string",
+                    "criteria": ["string"],
+                    "addEnabled": true,
+                    "removeEnabled": true
+                  }
+                ],
+                "schedule": {
+                  "totalWeeks": "integer",
+                  "weeks": [
+                    {
+                      "weekNumber": "integer",
+                      "startDate": "date",
+                      "endDate": "date",
+                      "learningObjectives": ["string"],
+                      "activities": ["string"],
+                      "addEnabled": true,
+                      "removeEnabled": true
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+  
