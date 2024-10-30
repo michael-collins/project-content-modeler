@@ -31,8 +31,10 @@ function renderPathway(pathway) {
   section.className = 'border border-gray-300 rounded-lg p-4 mb-4 bg-gray-50';
 
   const removeButton = document.createElement('button');
-  removeButton.className = 'float-right bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600';
-  removeButton.textContent = 'Remove Pathway';
+  removeButton.className = 'float-right bg-red-500 text-white p-1 rounded-full hover:bg-red-600';
+  removeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+    <path fill-rule="evenodd" d="M6 4a1 1 0 011-1h6a1 1 0 011 1v1h3a1 1 0 110 2h-1v9a2 2 0 01-2 2H6a2 2 0 01-2-2V7H3a1 1 0 110-2h3V4zm2 3a1 1 0 012 0v6a1 1 0 11-2 0V7zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V7z" clip-rule="evenodd"/>
+  </svg>`;
   removeButton.onclick = () => removeItem('pathway', pathway.id);
 
   const title = document.createElement('h2');
@@ -66,8 +68,10 @@ function renderSpecialization(pathwayId, spec) {
   section.className = 'border border-gray-300 rounded-lg p-4 mb-2 bg-white';
 
   const removeButton = document.createElement('button');
-  removeButton.className = 'float-right bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600';
-  removeButton.textContent = 'Remove Specialization';
+  removeButton.className = 'float-right bg-red-500 text-white p-1 rounded-full hover:bg-red-600';
+  removeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+    <path fill-rule="evenodd" d="M6 4a1 1 0 011-1h6a1 1 0 011 1v1h3a1 1 0 110 2h-1v9a2 2 0 01-2 2H6a2 2 0 01-2-2V7H3a1 1 0 110-2h3V4zm2 3a1 1 0 012 0v6a1 1 0 11-2 0V7zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V7z" clip-rule="evenodd"/>
+  </svg>`;
   removeButton.onclick = () => removeItem('specialization', pathwayId, spec.id);
 
   const title = document.createElement('h3');
@@ -80,6 +84,19 @@ function renderSpecialization(pathwayId, spec) {
   section.appendChild(createInput('Description', spec.description, 'text', { field: 'description', pathwayId, specId: spec.id }));
 
   return section;
+}
+
+// Updated removeItem function to handle deletion of items by type
+function removeItem(type, pathwayId, specId = null) {
+  if (type === 'pathway') {
+    contentModel.pathways = contentModel.pathways.filter(p => p.id !== pathwayId);
+  } else if (type === 'specialization') {
+    const pathway = contentModel.pathways.find(p => p.id === pathwayId);
+    if (pathway) {
+      pathway.specializations = pathway.specializations.filter(s => s.id !== specId);
+    }
+  }
+  renderContent();  // Re-render content to update the display
 }
 
 // Update JSON and directly update model on input change
