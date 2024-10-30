@@ -6,6 +6,7 @@ async function loadConfig() {
   try {
     const response = await fetch('config.json');
     config = await response.json();
+    console.log("Loaded config:", config);  // Log the loaded config
     initializeContentModel();
     renderContent();
   } catch (error) {
@@ -16,12 +17,13 @@ async function loadConfig() {
 // Initialize content model based on the configuration
 function initializeContentModel() {
   contentModel = createDefaultStructure(config);
+  console.log("Initialized content model:", contentModel);  // Log the initialized content model
 }
 
-// Create default structure based on config
+// Recursively create the default structure based on config
 function createDefaultStructure(schema) {
   if (Array.isArray(schema)) {
-    return schema.map(item => createDefaultStructure(item));
+    return [createDefaultStructure(schema[0])];
   }
   
   if (typeof schema === 'object') {
@@ -33,201 +35,156 @@ function createDefaultStructure(schema) {
     return obj;
   }
 
-  return null;  // Placeholder for default values if needed
+  return '';  // Return an empty string for basic fields
 }
 
-// Generic add function
-function addItem(parent, key) {
-  const itemConfig = config[key];
-  if (!itemConfig || !itemConfig.addEnabled) return;
+// Generic add function using path to reach nested items
+function addItem(parent, key, configSchema) {
+  if (!configSchema || !configSchema.addEnabled) return;
 
-  const newItem = createDefaultStructure(itemConfig);
+  const newItem = createDefaultStructure(configSchema);
+  
+  if (!Array.isArray(parent[key])) {
+    parent[key] = [];
+  }
   parent[key].push(newItem);
+  console.log(`Added item to ${key}:`, newItem);  // Log the addition of a new item
   renderContent();
 }
 
 // Generic remove function
-function removeItem(parentArray, index, configKey) {
-  const itemConfig = config[configKey];
-  if (!itemConfig || !itemConfig.removeEnabled) return;
-
-  parentArray.splice(index, 1);
+function removeItem(parentArray, index) {
+  const removedItem = parentArray.splice(index, 1);
+  console.log("Removed item:", removedItem);  // Log the removal of an item
   renderContent();
 }
 
 // Render the full content model
 function renderContent() {
-  const pathwaysContainer = document.getElementById('pathways');
-  pathwaysContainer.innerHTML = ''; // Clear existing content
-
-  contentModel.Pathway?.specializations?.forEach((pathway, index) => {
-    pathwaysContainer.appendChild(renderPathway(pathway, index));
-  });
-
+  console.log("Rendering content model:", contentModel);  // Log the current content model
+  const container = document.getElementById('pathways');
+  container.innerHTML = '';  // Clear existing content
+  container.appendChild(renderObject(contentModel, config));
+  
   // Display JSON output for preview
   document.getElementById('output').innerHTML = `<pre>${JSON.stringify(contentModel, null, 2)}</pre>`;
 }
 
-// Render a pathway
-function renderPathway(pathway, index) {
-  const pathwayConfig = config.Pathway;
-  const section = document.createElement('div');
-  section.className = 'border border-gray-300 rounded-lg p-4 mb-4 bg-gray-50';
+// Recursive function to render an object or array based on config
+function renderObject(obj, schema, path = []) {
+  console.log("Rendering object:", obj, "with schema:", schema);  // Log object and schema at each recursion
+  const container = document.createElement('div');
+  container.className = 'ml-4 mt-3 space-y-2';
 
-<<<<<<< Updated upstream
-  const removeButton = document.createElement('button');
-  removeButton.className = 'float-right bg-red-500 text-white p-1 rounded-full hover:bg-red-600';
-  removeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-    <path fill-rule="evenodd" d="M6 4a1 1 0 011-1h6a1 1 0 011 1v1h3a1 1 0 110 2h-1v9a2 2 0 01-2 2H6a2 2 0 01-2-2V7H3a1 1 0 110-2h3V4zm2 3a1 1 0 012 0v6a1 1 0 11-2 0V7zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V7z" clip-rule="evenodd"/>
-  </svg>`;
-  removeButton.onclick = () => removeItem('pathway', pathway.id);
-=======
-  if (pathwayConfig.removeEnabled) {
-    const removeButton = document.createElement('button');
-    removeButton.className = 'float-right bg-red-500 text-white p-1 rounded-full hover:bg-red-600';
-    removeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-      <path fill-rule="evenodd" d="M6 4a1 1 0 011-1h6a1 1 0 011 1v1h3a1 1 0 110 2h-1v9a2 2 0 01-2 2H6a2 2 0 01-2-2V7H3a1 1 0 110-2h3V4zm2 3a1 1 0 012 0v6a1 1 0 11-2 0V7zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V7z" clip-rule="evenodd"/>
-    </svg>`;
-    removeButton.onclick = () => removeItem(contentModel.Pathway.specializations, index, 'Pathway');
-    section.appendChild(removeButton);
-  }
->>>>>>> Stashed changes
+  for (const key in obj) {
+    let fieldSchema = schema && schema[key];  // Check if schema exists for the key
 
-  const title = document.createElement('h2');
-  title.className = 'text-lg font-semibold mb-2';
-  title.textContent = 'Pathway';
+    if (Array.isArray(fieldSchema)) {
+      fieldSchema = fieldSchema[0];  // Use the first item as schema for array elements
+    }
 
-  section.appendChild(title);
-  section.appendChild(createInput('Title', pathway.title, 'text', { field: 'title', pathwayId: pathway.id }));
-  section.appendChild(createInput('Description', pathway.description, 'text', { field: 'description', pathwayId: pathway.id }));
+    // Skip rendering if fieldSchema is undefined
+    if (!fieldSchema) {
+      console.log(`Skipping ${key} as it has no schema.`);  // Log skipping undefined schema
+      continue;
+    }
 
-  const specializationContainer = document.createElement('div');
-  specializationContainer.className = 'ml-4 mt-3 space-y-2';
+    if (Array.isArray(obj[key])) {
+      const arrayContainer = document.createElement('div');
+      const title = document.createElement('h3');
+      title.className = 'font-semibold mb-2';
+      title.textContent = `${key.charAt(0).toUpperCase() + key.slice(1)}`;
+      arrayContainer.appendChild(title);
 
-<<<<<<< Updated upstream
-  pathway.specializations.forEach(spec => {
-    specializationContainer.appendChild(renderSpecialization(pathway.id, spec));
-  });
+      // Render items in the array
+      obj[key].forEach((item, index) => {
+        const itemContainer = document.createElement('div');
+        itemContainer.className = 'border border-gray-300 rounded-lg p-4 mb-2 bg-white';
 
-  const addSpecializationButton = document.createElement('button');
-  addSpecializationButton.className = 'w-full mt-2 bg-blue-500 text-white font-bold py-1 px-2 rounded hover:bg-blue-600';
-  addSpecializationButton.textContent = 'Add Specialization';
-  addSpecializationButton.onclick = () => addSpecialization(pathway.id);
-=======
-  pathway.specializations.forEach((spec, specIndex) => {
-    specializationContainer.appendChild(renderSpecialization(pathway.id, spec, specIndex));
-  });
+        // Add remove button for each item if allowed
+        if (fieldSchema?.removeEnabled) {  // Safely access removeEnabled
+          const removeButton = document.createElement('button');
+          removeButton.className = 'float-right bg-red-500 text-white p-1 rounded-full hover:bg-red-600';
+          removeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M6 4a1 1 0 011-1h6a1 1 0 011 1v1h3a1 1 0 110 2h-1v9a2 2 0 01-2 2H6a2 2 0 01-2-2V7H3a1 1 0 110-2h3V4zm2 3a1 1 0 012 0v6a1 1 0 11-2 0V7zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V7z" clip-rule="evenodd"/>
+          </svg>`;
+          removeButton.onclick = () => removeItem(obj[key], index);
+          itemContainer.appendChild(removeButton);
+        }
 
-  if (pathwayConfig.specializations[0].addEnabled) {
-    const addSpecializationButton = document.createElement('button');
-    addSpecializationButton.className = 'w-full mt-2 bg-blue-500 text-white font-bold py-1 px-2 rounded hover:bg-blue-600';
-    addSpecializationButton.textContent = 'Add Specialization';
-    addSpecializationButton.onclick = () => addItem(pathway, 'specializations');
-    section.appendChild(addSpecializationButton);
-  }
->>>>>>> Stashed changes
+        // Recursively render nested object
+        itemContainer.appendChild(renderObject(item, fieldSchema, [...path, key, index]));
+        arrayContainer.appendChild(itemContainer);
+      });
 
-  section.appendChild(specializationContainer);
-  section.appendChild(addSpecializationButton);
-  return section;
-}
+      // Add button for new items if allowed
+      if (fieldSchema && fieldSchema.addEnabled) {  // Check that addEnabled is accessible
+        const addButton = document.createElement('button');
+        addButton.className = 'w-full mt-2 bg-blue-500 text-white font-bold py-1 px-2 rounded hover:bg-blue-600';
+        addButton.textContent = `Add ${key.slice(0, -1)}`;  // Singular form
+        addButton.onclick = () => addItem(obj, key, fieldSchema);
+        arrayContainer.appendChild(addButton);
+      }
 
-// Render a specialization
-function renderSpecialization(pathwayId, spec, index) {
-  const specConfig = config.Pathway.specializations[0];
-  const section = document.createElement('div');
-  section.className = 'border border-gray-300 rounded-lg p-4 mb-2 bg-white';
-
-<<<<<<< Updated upstream
-  const removeButton = document.createElement('button');
-  removeButton.className = 'float-right bg-red-500 text-white p-1 rounded-full hover:bg-red-600';
-  removeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-    <path fill-rule="evenodd" d="M6 4a1 1 0 011-1h6a1 1 0 011 1v1h3a1 1 0 110 2h-1v9a2 2 0 01-2 2H6a2 2 0 01-2-2V7H3a1 1 0 110-2h3V4zm2 3a1 1 0 012 0v6a1 1 0 11-2 0V7zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V7z" clip-rule="evenodd"/>
-  </svg>`;
-  removeButton.onclick = () => removeItem('specialization', pathwayId, spec.id);
-=======
-  if (specConfig.removeEnabled) {
-    const removeButton = document.createElement('button');
-    removeButton.className = 'float-right bg-red-500 text-white p-1 rounded-full hover:bg-red-600';
-    removeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-      <path fill-rule="evenodd" d="M6 4a1 1 0 011-1h6a1 1 0 011 1v1h3a1 1 0 110 2h-1v9a2 2 0 01-2 2H6a2 2 0 01-2-2V7H3a1 1 0 110-2h3V4zm2 3a1 1 0 012 0v6a1 1 0 11-2 0V7zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V7z" clip-rule="evenodd"/>
-    </svg>`;
-    removeButton.onclick = () => removeItem(contentModel.Pathway.specializations, index, 'Specialization');
-    section.appendChild(removeButton);
-  }
->>>>>>> Stashed changes
-
-  const title = document.createElement('h3');
-  title.className = 'text-md font-semibold mb-1';
-  title.textContent = 'Specialization';
-
-  section.appendChild(title);
-  section.appendChild(createInput('Title', spec.title, 'text', { field: 'title', pathwayId, specId: spec.id }));
-  section.appendChild(createInput('Description', spec.description, 'text', { field: 'description', pathwayId, specId: spec.id }));
-
-  return section;
-}
-
-<<<<<<< Updated upstream
-// Updated removeItem function to handle deletion of items by type
-function removeItem(type, pathwayId, specId = null) {
-  if (type === 'pathway') {
-    contentModel.pathways = contentModel.pathways.filter(p => p.id !== pathwayId);
-  } else if (type === 'specialization') {
-    const pathway = contentModel.pathways.find(p => p.id === pathwayId);
-    if (pathway) {
-      pathway.specializations = pathway.specializations.filter(s => s.id !== specId);
+      container.appendChild(arrayContainer);
+    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+      // Render nested objects
+      const nestedContainer = renderObject(obj[key], fieldSchema, [...path, key]);
+      const title = document.createElement('h3');
+      title.className = 'font-semibold mb-2';
+      title.textContent = `${key.charAt(0).toUpperCase() + key.slice(1)}`;
+      container.appendChild(title);
+      container.appendChild(nestedContainer);
+    } else {
+      // Render input fields for basic fields
+      const inputContainer = createInput(key, obj[key], value => {
+        obj[key] = value;
+        renderContent();
+      });
+      container.appendChild(inputContainer);
     }
   }
-  renderContent();  // Re-render content to update the display
+
+  return container;
 }
 
-// Update JSON and directly update model on input change
-=======
-// Create an input field dynamically
->>>>>>> Stashed changes
-function createInput(label, value = '', type = 'text', dataset = {}) {
+// Helper to create input fields for primitive values
+function createInput(label, value, onInputChange) {
   const container = document.createElement('div');
   container.className = 'mb-2';
 
   const labelEl = document.createElement('label');
   labelEl.className = 'block font-medium';
-  labelEl.textContent = label;
+  labelEl.textContent = label.charAt(0).toUpperCase() + label.slice(1);
   container.appendChild(labelEl);
 
   const input = document.createElement('input');
-  input.type = type;
-  input.value = value;
+  input.type = 'text';
+  input.value = value || '';
   input.className = 'w-full border border-gray-300 rounded px-3 py-1 mt-1';
-  Object.keys(dataset).forEach(key => {
-    input.dataset[key] = dataset[key];
+
+  // Update model on blur or Enter key
+  input.addEventListener('blur', () => onInputChange(input.value));
+  input.addEventListener('keypress', event => {
+    if (event.key === 'Enter') onInputChange(input.value);
   });
 
-  input.addEventListener('input', (event) => updateModel(event));
   container.appendChild(input);
 
   return container;
 }
 
-// Update content model dynamically
-function updateModel(event) {
-  const { field, pathwayId, specId } = event.target.dataset;
-  const value = event.target.value;
-
-  const pathway = contentModel.Pathway.specializations.find(p => p.id == pathwayId);
-  if (!pathway) return;
-
-  if (specId) {
-    const spec = pathway.specializations.find(s => s.id == specId);
-    if (!spec) return;
-    spec[field] = value;
-  } else {
-    pathway[field] = value;
-  }
-
-  // Update JSON preview
-  document.getElementById('output').innerHTML = `<pre>${JSON.stringify(contentModel, null, 2)}</pre>`;
+// Clear content model and update display
+function clearContent() {
+  contentModel = createDefaultStructure(config); // Reset to default structure
+  console.log("Cleared content model:", contentModel);  // Log the cleared content model
+  renderContent(); // Update the display to show the cleared state
 }
 
 // Load configuration when the page is ready
-window.addEventListener('DOMContentLoaded', loadConfig);
+window.addEventListener('DOMContentLoaded', () => {
+  loadConfig();
+  
+  // Add clear button functionality
+  document.getElementById('clear-button').addEventListener('click', clearContent);
+});
