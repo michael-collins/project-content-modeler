@@ -3,33 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <title>Content Model Builder</title>
-  <link rel="stylesheet" href="style.css">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-  <div class="container">
-    <h1>Content Model Builder</h1>
+<body class="bg-gray-100">
+  <div class="container mx-auto py-10 px-5">
+    <h1 class="text-2xl font-bold mb-6 text-center">Content Model Builder</h1>
     
-    <!-- Authorization and Repository Selection -->
-    <button id="authorize-button">Authorize GitHub</button>
-    
-    <!-- Repository selection UI, initially hidden -->
-    <div id="repo-selection" style="display: none;">
-      <label for="repo-select">Select GitHub Repository:</label>
-      <select id="repo-select"></select>
-      <button id="confirm-repo">Use Selected Repo</button>
-    </div>
+    <!-- Two Column Layout -->
+    <div class="flex flex-col md:flex-row gap-6">
+      
+      <!-- Left Column: Controls and Inputs -->
+      <div class="w-full md:w-1/2 bg-white p-5 rounded shadow">
+        <!-- Authorization and Repository Selection -->
+        <button id="authorize-button" class="w-full mb-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600">
+          Authorize GitHub
+        </button>
+        
+        <div id="repo-selection" class="mb-4" style="display: none;">
+          <label for="repo-select" class="block font-semibold mb-2">Select GitHub Repository:</label>
+          <select id="repo-select" class="w-full border border-gray-300 rounded px-3 py-2 mb-2"></select>
+          <button id="confirm-repo" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-600">
+            Use Selected Repo
+          </button>
+        </div>
 
-    <!-- Buttons to save and load JSON to/from GitHub -->
-    <button onclick="saveToGitHub()">Save JSON to GitHub</button>
-    <button onclick="loadFromGitHub()">Load JSON from GitHub</button>
-    
-    <!-- Area to add pathways and export to Common Cartridge -->
-    <div id="pathways"></div>
-    <button onclick="addPathway()">Add Pathway</button>
-    <button onclick="exportToCommonCartridge()">Export to Common Cartridge</button>
-    
-    <!-- Output container for JSON preview or any other output -->
-    <div id="output"></div>
+        <!-- Buttons to save and load JSON -->
+        <div class="flex gap-2 mb-4">
+          <button onclick="saveToGitHub()" class="w-full bg-indigo-500 text-white font-bold py-2 px-4 rounded hover:bg-indigo-600">
+            Save JSON to GitHub
+          </button>
+          <button onclick="loadFromGitHub()" class="w-full bg-indigo-500 text-white font-bold py-2 px-4 rounded hover:bg-indigo-600">
+            Load JSON from GitHub
+          </button>
+        </div>
+
+        <!-- Area to add pathways and export to Common Cartridge -->
+        <div id="pathways" class="mb-4"></div>
+        <button onclick="addPathway()" class="w-full mb-2 bg-purple-500 text-white font-bold py-2 px-4 rounded hover:bg-purple-600">
+          Add Pathway
+        </button>
+        <button onclick="exportToCommonCartridge()" class="w-full bg-yellow-500 text-white font-bold py-2 px-4 rounded hover:bg-yellow-600">
+          Export to Common Cartridge
+        </button>
+      </div>
+      
+      <!-- Right Column: JSON Output Preview -->
+      <div class="w-full md:w-1/2 bg-white p-5 rounded shadow overflow-auto">
+        <h2 class="text-lg font-bold mb-4">JSON Preview</h2>
+        <div id="output" class="bg-gray-50 p-3 rounded text-xs text-gray-800 whitespace-pre-wrap"></div>
+      </div>
+
+    </div>
   </div>
 
   <!-- Include JavaScript files -->
